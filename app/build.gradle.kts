@@ -78,10 +78,13 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.1")
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+    implementation("androidx.hilt:hilt-navigation-fragment:1.2.0")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // Google Sign in
     implementation("androidx.credentials:credentials:1.3.0-alpha04")
@@ -93,9 +96,13 @@ dependencies {
     implementation(platform("io.github.jan-tennert.supabase:bom:2.5.0"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:gotrue-kt")
-    implementation("io.ktor:ktor-client-android:2.3.11")
+    implementation("io.ktor:ktor-client-cio:2.3.11")
     implementation ("io.github.jan-tennert.supabase:realtime-kt")
 
     // Navigation
     implementation ("androidx.navigation:navigation-compose:2.7.7")
+
+    // Moshi
+    implementation ("com.squareup.moshi:moshi:1.14.0")
+    implementation ("com.squareup.moshi:moshi-kotlin:1.14.0")
 }
