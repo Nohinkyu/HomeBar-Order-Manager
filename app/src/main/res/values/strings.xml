@@ -6,4 +6,11 @@
     <string name="message_to_many_sign_in_cancel">"로그인을 여러 번 취소하여 일시적으로 로그인이 차단되었습니다. 잠시 후 다시 시도해 주세요."</string>
     <string name="message_sign_fail">"로그인에 실패했습니다. 네트워크 상태를 확인하거나 나중에 다시 시도해 주세요."</string>
     <string name="message_sign_in_success">HomeBar Order Manager 로그인 성공.</string>
+
+    <string name="price">원</string>
+    
+    <string name="order_screen_appbar_title">Order</string>
+    <string name="order_screen_revenue">매출</string>
+    <string name="order_screen_all_delete">전체삭제</string>
+    <string name="order_screen_menu_product">품목</string>
 </resources>
