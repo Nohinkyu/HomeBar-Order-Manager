@@ -18,18 +18,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +46,9 @@ import androidx.navigation.NavController
 import com.devik.homebarordermanager.R
 import com.devik.homebarordermanager.data.model.CartMenuItem
 import com.devik.homebarordermanager.data.model.OrderItem
+import com.devik.homebarordermanager.ui.component.dialog.DeleteInProgressDialog
+import com.devik.homebarordermanager.ui.component.dialog.ResultDialog
+import com.devik.homebarordermanager.ui.component.dialog.YesOrNoDialog
 import com.devik.homebarordermanager.ui.component.topappbar.SettingWithTitleAppBar
 import com.devik.homebarordermanager.ui.theme.LightBlue
 import com.devik.homebarordermanager.ui.theme.LightGray
@@ -54,7 +58,6 @@ import com.devik.homebarordermanager.ui.theme.OrangeSoda
 import com.devik.homebarordermanager.util.DateFormatUtil
 import com.devik.homebarordermanager.util.TextFormatUtil
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderScreen(navController: NavController) {
 
@@ -65,7 +68,49 @@ fun OrderScreen(navController: NavController) {
         val viewModel: OrderViewModel = hiltViewModel()
         val orderList by viewModel.orderList.collectAsStateWithLifecycle()
         val revenueState by viewModel.revenueState.collectAsStateWithLifecycle()
+        val networkErrorState by viewModel.networkErrorState.collectAsStateWithLifecycle()
+        val allOrderDeleteInProgressState by viewModel.allOrderDeleteInProgressState.collectAsStateWithLifecycle()
+        val allOrderDeleteCheckDialogState by viewModel.allOrderDeleteCheckDialogState.collectAsStateWithLifecycle()
+        val allOrderDeleteSuccess by viewModel.allOrderDeleteSuccess.collectAsStateWithLifecycle()
+        val gridState = rememberLazyGridState()
         val itemColors = listOf(LightBlue, MintGreen, LightPurple)
+
+        LaunchedEffect(Unit) {
+            viewModel.getOrderList()
+        }
+        LaunchedEffect(orderList.size) {
+            if (orderList.isNotEmpty()) {
+                gridState.animateScrollToItem(orderList.size - 1)
+            }
+        }
+        if (networkErrorState) {
+            ResultDialog(
+                onDismissRequest = { viewModel.closeNetworkErrorDialog() },
+                resultMessageTitle = stringResource(R.string.network_error_dialog_title),
+                resultMessageBody = stringResource(R.string.network_error_dialog_body).trimMargin()
+            )
+        }
+        if (allOrderDeleteCheckDialogState) {
+            YesOrNoDialog(
+                body = stringResource(R.string.all_order_delete_check_dialog_body),
+                yesButtonText = stringResource(R.string.all_order_delete_check_dialog_yes_button),
+                onYesClickRequest = {
+                    viewModel.allDeleteOrder()
+                    viewModel.closeAllOrderDeleteCheckDialog()
+                },
+                onDismissRequest = { viewModel.closeAllOrderDeleteCheckDialog() })
+
+        }
+        if (allOrderDeleteInProgressState) {
+            DeleteInProgressDialog()
+        }
+        if (allOrderDeleteSuccess) {
+            ResultDialog(
+                onDismissRequest = { viewModel.closeAllOrderDeleteSuccessDialog() },
+                resultMessageTitle = stringResource(R.string.all_order_delete_success_dialog_title),
+                resultMessageBody = stringResource(R.string.all_order_delete_success_dialog_body)
+            )
+        }
 
         Scaffold(
             topBar = {
@@ -78,20 +123,24 @@ fun OrderScreen(navController: NavController) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
+                        state = gridState,
                         modifier = Modifier
                             .fillMaxWidth()
                             .fillMaxHeight(0.9f)
                     ) {
                         itemsIndexed(orderList) { index, orderItem ->
                             val backgroundColor = itemColors[index % itemColors.size]
-                            OrderItem(orderItem = orderItem, orderColor = backgroundColor)
+                            OrderItem(
+                                orderItem = orderItem,
+                                orderColor = backgroundColor,
+                                onDeleteClick = { viewModel.deleteOrder(orderItem.id) })
                         }
                     }
 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight(0.08f)
+                            .height(100.dp)
                             .align(Alignment.BottomCenter)
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -101,7 +150,7 @@ fun OrderScreen(navController: NavController) {
                             modifier = Modifier
                                 .fillMaxWidth(0.5f)
                                 .fillMaxHeight()
-                                .background(color = LightGray, shape = RoundedCornerShape(5.dp))
+                                .background(color = LightGray, shape = RoundedCornerShape(5.dp)),
                         ) {
                             Row(
                                 modifier = Modifier
@@ -128,14 +177,17 @@ fun OrderScreen(navController: NavController) {
                         }
                         Spacer(modifier = Modifier.size(16.dp))
                         Button(
-                            onClick = { },
+                            onClick = { viewModel.openAllOrderDeleteCheckDialog() },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .fillMaxHeight(),
                             shape = RoundedCornerShape(5.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = OrangeSoda)
                         ) {
-                            Text(text = stringResource(R.string.order_screen_all_delete), fontSize = 18.sp)
+                            Text(
+                                text = stringResource(R.string.order_screen_all_delete),
+                                fontSize = 18.sp
+                            )
                         }
                     }
                 }
@@ -145,7 +197,7 @@ fun OrderScreen(navController: NavController) {
 }
 
 @Composable
-private fun OrderItem(orderItem: OrderItem, orderColor: Color) {
+private fun OrderItem(orderItem: OrderItem, orderColor: Color, onDeleteClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth(0.5f)
@@ -173,7 +225,7 @@ private fun OrderItem(orderItem: OrderItem, orderColor: Color) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "#${orderItem.id}",
+                        text = "#${orderItem.orderNumber}",
                         color = Color.White,
                         modifier = Modifier.padding(start = 16.dp),
                         fontSize = 18.sp,
@@ -206,7 +258,10 @@ private fun OrderItem(orderItem: OrderItem, orderColor: Color) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
                             text = "${orderItem.order.sumOf { it.menuCount }}",
                             modifier = Modifier.padding(start = 16.dp),
@@ -241,7 +296,7 @@ private fun OrderItem(orderItem: OrderItem, orderColor: Color) {
                 .align(
                     Alignment.TopEnd
                 )
-                .clickable { }
+                .clickable { onDeleteClick() }
         )
     }
 }

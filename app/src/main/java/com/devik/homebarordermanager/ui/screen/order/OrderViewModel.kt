@@ -9,19 +9,18 @@ import com.devik.homebarordermanager.data.source.database.PreferenceManager
 import com.devik.homebarordermanager.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.annotations.SupabaseExperimental
-import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
-import io.github.jan.supabase.realtime.selectAsFlow
+import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.channel
+import io.github.jan.supabase.realtime.postgresChangeFlow
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
-@OptIn(SupabaseExperimental::class)
 @HiltViewModel
 class OrderViewModel @Inject constructor(
     private val supabase: SupabaseClient,
@@ -35,9 +34,55 @@ class OrderViewModel @Inject constructor(
     private val _revenueState = MutableStateFlow<Int>(0)
     val revenueState: StateFlow<Int> = _revenueState
 
+    private val _networkErrorState = MutableStateFlow<Boolean>(false)
+    val networkErrorState: StateFlow<Boolean> = _networkErrorState
+
+    private val _allOrderDeleteInProgressState = MutableStateFlow<Boolean>(false)
+    val allOrderDeleteInProgressState: StateFlow<Boolean> = _allOrderDeleteInProgressState
+
+    private val _allOrderDeleteSuccess = MutableStateFlow<Boolean>(false)
+    val allOrderDeleteSuccess: StateFlow<Boolean> = _allOrderDeleteSuccess
+
+    private val _allOrderDeleteCheckDialogState = MutableStateFlow<Boolean>(false)
+    val allOrderDeleteCheckDialogState: StateFlow<Boolean> = _allOrderDeleteCheckDialogState
+
     init {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val channel = supabase.channel(Constants.SUPABASE_CHANNEL_ID ) {
+
+                }
+                val changeFlow = channel.postgresChangeFlow<PostgresAction>(schema = Constants.SUPABASE_CHANNEL_SCHEMA) {
+                    table = Constants.SUPABASE_DB_TABLE_NAME
+                    filter(
+                        Constants.SUPABASE_DB_COLUMN_ORDER_USER_MAIL,
+                        FilterOperator.EQ,
+                        preferenceManager.getString(Constants.KEY_MAIL_ADDRESS, "")
+                    )
+                }
+                channel.subscribe()
+                changeFlow.collect {
+                    when (it) {
+                        is PostgresAction.Insert -> {
+                            val order: Order = Json.decodeFromString(it.record.toString())
+                            _orderList.value = _orderList.value + orderRepository.toOrderItem(order)
+                        }
+
+                        is PostgresAction.Delete -> {
+                            val deleteOrder = it.oldRecord[Constants.SUPABASE_DB_COLUMN_ID].toString().toInt()
+                            _orderList.value = _orderList.value.filter { it.id != deleteOrder }
+                        }
+
+                        else -> {
+
+                        }
+                    }
+                }
+            } catch (e: java.lang.Exception) {
+                _networkErrorState.value = true
+            }
+        }
         viewModelScope.launch {
-            getOrderList()
             _orderList.collect { order ->
                 val totalRevenue =
                     order.sumOf { it.order.sumOf { menu -> menu.menuPrice * menu.menuCount } }
@@ -46,20 +91,56 @@ class OrderViewModel @Inject constructor(
         }
     }
 
-    private fun getOrderList() {
+    fun getOrderList() {
         viewModelScope.launch(Dispatchers.IO) {
-            val flow: Flow<List<Order>> =
-                supabase.from(Constants.SUPABASE_DB_TABLE_NAME).selectAsFlow(
-                    Order::orderUserMail,
-                    filter = FilterOperation(
-                        Constants.SUPABASE_DB_COLUMN_ORDER_USER_MAIL,
-                        FilterOperator.EQ,
-                        preferenceManager.getString(Constants.KEY_MAIL_ADDRESS, "")
-                    )
-                )
-            flow.collect {
-                _orderList.value = _orderList.value + orderRepository.toOrderItemList(it)
+            try {
+                _orderList.value = orderRepository.getOrderList().sortedBy { it.orderNumber }
+            } catch (e: java.lang.Exception) {
+                _networkErrorState.value = true
             }
         }
+    }
+
+    fun deleteOrder(id: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                orderRepository.deleteOrder(id)
+            } catch (e: java.lang.Exception) {
+                _networkErrorState.value = true
+            }
+        }
+    }
+
+    fun allDeleteOrder() {
+        if (_orderList.value.isNotEmpty()) {
+            viewModelScope.launch(Dispatchers.IO) {
+                _allOrderDeleteInProgressState.value = true
+                try {
+                    async { orderRepository.allDeleteOrder(_orderList.value) }.await()
+                    _allOrderDeleteInProgressState.value = false
+                    _allOrderDeleteSuccess.value = true
+                } catch (e: java.lang.Exception) {
+                    _networkErrorState.value = true
+                }
+            }
+        }
+    }
+
+    fun closeNetworkErrorDialog() {
+        _networkErrorState.value = false
+    }
+
+    fun closeAllOrderDeleteSuccessDialog() {
+        _allOrderDeleteSuccess.value = false
+    }
+
+    fun openAllOrderDeleteCheckDialog() {
+        if (_orderList.value.isNotEmpty()) {
+            _allOrderDeleteCheckDialogState.value = true
+        }
+    }
+
+    fun closeAllOrderDeleteCheckDialog() {
+        _allOrderDeleteCheckDialogState.value = false
     }
 }

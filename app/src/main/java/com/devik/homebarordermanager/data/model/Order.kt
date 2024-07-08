@@ -16,4 +16,7 @@ data class Order(
 
     @SerialName("order_user_mail")
     val orderUserMail: String,
+
+    @SerialName("order_number")
+    val orderNumber: String,
 )
