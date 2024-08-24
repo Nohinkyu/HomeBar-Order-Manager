@@ -17,7 +17,7 @@ object DateFormatUtil {
             }
         }
 
-    private const val DATE_YEAR_MONTH_DAY_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss"
+    const val DATE_YEAR_MONTH_DAY_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss"
     private const val TIME_SECOND_PATTERN = "HH:mm"
 
     fun getTime(dateTime: String): String {

@@ -1,5 +1,6 @@
 package com.devik.homebarordermanager.ui.screen.order
 
+import android.icu.text.SimpleDateFormat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.devik.homebarordermanager.data.model.Order
@@ -7,6 +8,7 @@ import com.devik.homebarordermanager.data.model.OrderItem
 import com.devik.homebarordermanager.data.repository.OrderRepository
 import com.devik.homebarordermanager.data.source.database.PreferenceManager
 import com.devik.homebarordermanager.util.Constants
+import com.devik.homebarordermanager.util.DateFormatUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
@@ -19,6 +21,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,20 +50,26 @@ class OrderViewModel @Inject constructor(
     private val _allOrderDeleteCheckDialogState = MutableStateFlow<Boolean>(false)
     val allOrderDeleteCheckDialogState: StateFlow<Boolean> = _allOrderDeleteCheckDialogState
 
+    private val _orderDeleteCheckDialogState = MutableStateFlow<Boolean>(false)
+    val orderDeleteCheckDialogState: StateFlow<Boolean> = _orderDeleteCheckDialogState
+
+    private val _deleteTargetOrderId = MutableStateFlow<Int>(0)
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val channel = supabase.channel(Constants.SUPABASE_CHANNEL_ID ) {
+                val channel = supabase.channel(Constants.SUPABASE_CHANNEL_ID) {
 
                 }
-                val changeFlow = channel.postgresChangeFlow<PostgresAction>(schema = Constants.SUPABASE_CHANNEL_SCHEMA) {
-                    table = Constants.SUPABASE_DB_TABLE_NAME
-                    filter(
-                        Constants.SUPABASE_DB_COLUMN_ORDER_USER_MAIL,
-                        FilterOperator.EQ,
-                        preferenceManager.getString(Constants.KEY_MAIL_ADDRESS, "")
-                    )
-                }
+                val changeFlow =
+                    channel.postgresChangeFlow<PostgresAction>(schema = Constants.SUPABASE_CHANNEL_SCHEMA) {
+                        table = Constants.SUPABASE_DB_TABLE_NAME
+                        filter(
+                            Constants.SUPABASE_DB_COLUMN_ORDER_USER_MAIL,
+                            FilterOperator.EQ,
+                            preferenceManager.getString(Constants.KEY_MAIL_ADDRESS, "")
+                        )
+                    }
                 channel.subscribe()
                 changeFlow.collect {
                     when (it) {
@@ -69,7 +79,8 @@ class OrderViewModel @Inject constructor(
                         }
 
                         is PostgresAction.Delete -> {
-                            val deleteOrder = it.oldRecord[Constants.SUPABASE_DB_COLUMN_ID].toString().toInt()
+                            val deleteOrder =
+                                it.oldRecord[Constants.SUPABASE_DB_COLUMN_ID].toString().toInt()
                             _orderList.value = _orderList.value.filter { it.id != deleteOrder }
                         }
 
@@ -94,20 +105,30 @@ class OrderViewModel @Inject constructor(
     fun getOrderList() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                _orderList.value = orderRepository.getOrderList().sortedBy { it.orderNumber }
+                _orderList.value =
+                    orderRepository.getOrderList().sortedBy { parseDateString(it.createAt) }
             } catch (e: java.lang.Exception) {
                 _networkErrorState.value = true
             }
         }
     }
 
-    fun deleteOrder(id: Int) {
+    private fun parseDateString(dateString: String): Date? {
+        return SimpleDateFormat(
+            DateFormatUtil.DATE_YEAR_MONTH_DAY_TIME_PATTERN,
+            Locale.getDefault()
+        ).parse(dateString)
+    }
+
+    fun deleteOrder() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                orderRepository.deleteOrder(id)
+                orderRepository.deleteOrder(_deleteTargetOrderId.value)
             } catch (e: java.lang.Exception) {
                 _networkErrorState.value = true
             }
+            _deleteTargetOrderId.value = 0
+            _orderDeleteCheckDialogState.value = false
         }
     }
 
@@ -142,5 +163,25 @@ class OrderViewModel @Inject constructor(
 
     fun closeAllOrderDeleteCheckDialog() {
         _allOrderDeleteCheckDialogState.value = false
+    }
+
+    fun openOrderDeleteDialog(deleteId: Int) {
+        _deleteTargetOrderId.value = deleteId
+        _orderDeleteCheckDialogState.value = true
+    }
+
+    fun closeOrderDeleteDialog() {
+        _orderDeleteCheckDialogState.value = false
+        _deleteTargetOrderId.value = 0
+    }
+
+    fun serviceComplete(id: Int) {
+        _orderList.value = _orderList.value.map { order ->
+            if (order.id == id) {
+                order.copy(serviceComplete = true)
+            } else {
+                order
+            }
+        }
     }
 }

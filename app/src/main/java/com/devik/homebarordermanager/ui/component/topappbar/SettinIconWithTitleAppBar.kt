@@ -7,7 +7,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import com.devik.homebarordermanager.ui.theme.OrangeSoda
 
@@ -22,6 +24,7 @@ fun SettingWithTitleAppBar(title: String, settingIconOnClick:() -> Unit) {
             IconButton(onClick =  settingIconOnClick ) {
                 Icon(imageVector = Icons.Default.Settings, contentDescription = "")
             }
-        }
+        },
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
     )
 }

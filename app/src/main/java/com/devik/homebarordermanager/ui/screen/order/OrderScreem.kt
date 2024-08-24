@@ -53,6 +53,7 @@ import com.devik.homebarordermanager.ui.component.dialog.ResultDialog
 import com.devik.homebarordermanager.ui.component.dialog.YesOrNoDialog
 import com.devik.homebarordermanager.ui.component.navigation.NavigationRoute
 import com.devik.homebarordermanager.ui.component.topappbar.SettingWithTitleAppBar
+import com.devik.homebarordermanager.ui.theme.DarkGray
 import com.devik.homebarordermanager.ui.theme.LightBlue
 import com.devik.homebarordermanager.ui.theme.LightGray
 import com.devik.homebarordermanager.ui.theme.LightPurple
@@ -75,6 +76,7 @@ fun OrderScreen(navController: NavController) {
         val allOrderDeleteInProgressState by viewModel.allOrderDeleteInProgressState.collectAsStateWithLifecycle()
         val allOrderDeleteCheckDialogState by viewModel.allOrderDeleteCheckDialogState.collectAsStateWithLifecycle()
         val allOrderDeleteSuccess by viewModel.allOrderDeleteSuccess.collectAsStateWithLifecycle()
+        val orderDeleteCheckDialogState by viewModel.orderDeleteCheckDialogState.collectAsStateWithLifecycle()
         val gridState = rememberLazyGridState()
         val itemColors = listOf(LightBlue, MintGreen, LightPurple)
 
@@ -115,6 +117,14 @@ fun OrderScreen(navController: NavController) {
             )
         }
 
+        if (orderDeleteCheckDialogState) {
+            YesOrNoDialog(
+                body = stringResource(R.string.order_screen_order_cancel_dialog_message),
+                yesButtonText = stringResource(R.string.dialog_button_yes),
+                onDismissRequest = { viewModel.closeOrderDeleteDialog() },
+                onYesClickRequest = { viewModel.deleteOrder() })
+        }
+
         Scaffold(
             topBar = {
                 SettingWithTitleAppBar(title = stringResource(R.string.order_screen_appbar_title),
@@ -122,7 +132,11 @@ fun OrderScreen(navController: NavController) {
             },
             modifier = Modifier.padding(top = 8.dp)
         ) {
-            Column(modifier = Modifier.padding(it)) {
+            Column(
+                modifier = Modifier
+                    .padding(it)
+                    .background(Color.White)
+            ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
@@ -132,11 +146,16 @@ fun OrderScreen(navController: NavController) {
                             .fillMaxHeight(0.9f)
                     ) {
                         itemsIndexed(orderList) { index, orderItem ->
-                            val backgroundColor = itemColors[index % itemColors.size]
+                            val backgroundColor = if (orderItem.serviceComplete) {
+                                DarkGray
+                            } else {
+                                itemColors[index % itemColors.size]
+                            }
                             OrderItem(
                                 orderItem = orderItem,
                                 orderColor = backgroundColor,
-                                onDeleteClick = { viewModel.deleteOrder(orderItem.id) })
+                                onOrderClick = { viewModel.serviceComplete(orderItem.id) },
+                                onDeleteClick = { viewModel.openOrderDeleteDialog(orderItem.id) })
                         }
                     }
 
@@ -200,11 +219,18 @@ fun OrderScreen(navController: NavController) {
 }
 
 @Composable
-private fun OrderItem(orderItem: OrderItem, orderColor: Color, onDeleteClick: () -> Unit) {
+private fun OrderItem(
+    orderItem: OrderItem,
+    orderColor: Color,
+    onDeleteClick: () -> Unit,
+    onOrderClick: () -> Unit
+) {
+
     Box(
         modifier = Modifier
             .fillMaxWidth(0.5f)
-            .fillMaxHeight(0.35f),
+            .fillMaxHeight(0.35f)
+            .clickable { onOrderClick() },
     ) {
         Card(
             modifier = Modifier
@@ -228,7 +254,7 @@ private fun OrderItem(orderItem: OrderItem, orderColor: Color, onDeleteClick: ()
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "#${orderItem.tableNumber}",
+                        text = "# ${orderItem.tableNumber}",
                         color = Color.White,
                         modifier = Modifier.padding(start = 16.dp),
                         fontSize = 18.sp,

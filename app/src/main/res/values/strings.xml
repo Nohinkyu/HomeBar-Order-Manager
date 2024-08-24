@@ -14,6 +14,7 @@
     <string name="order_screen_revenue">매출</string>
     <string name="order_screen_all_delete">전체삭제</string>
     <string name="order_screen_menu_product">품목</string>
+    <string name="order_screen_order_cancel_dialog_message">주문을 취소하시겠습니까?</string>
 
     <string name="content_description_info_icon">info</string>
 
