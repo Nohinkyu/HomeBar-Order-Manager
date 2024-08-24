@@ -6,4 +6,30 @@
     <string name="message_to_many_sign_in_cancel">"로그인을 여러 번 취소하여 일시적으로 로그인이 차단되었습니다. 잠시 후 다시 시도해 주세요."</string>
     <string name="message_sign_fail">"로그인에 실패했습니다. 네트워크 상태를 확인하거나 나중에 다시 시도해 주세요."</string>
     <string name="message_sign_in_success">HomeBar Order Manager 로그인 성공.</string>
+
+    <string name="price">원</string>
+    
+    <string name="order_screen_appbar_title">Order</string>
+    <string name="order_screen_revenue">매출</string>
+    <string name="order_screen_all_delete">전체삭제</string>
+    <string name="order_screen_menu_product">품목</string>
+
+    <string name="content_description_info_icon">info</string>
+
+    <string name="dialog_button_cancel">취소</string>
+    <string name="dialog_button_yes">확인</string>
+
+    <string name="delete_in_progress_dialog_body">주문내역을 삭제 중입니다.</string>
+    
+    <string name="network_error_dialog_title">네트워크 에러</string>
+    <string name="network_error_dialog_body">"""주문내역을 확인하는 과정에서 문제가 발생했습니다.
+                    |이용에 불편을드려 죄송합니다.
+                    |네트워크 연결 상태를 확인해 주세요.
+                """</string>
+
+    <string name="all_order_delete_check_dialog_body">주문내역을 모두 삭제하시겠습니까?</string>
+    <string name="all_order_delete_check_dialog_yes_button">삭제</string>
+
+    <string name="all_order_delete_success_dialog_title">삭제 완료</string>
+    <string name="all_order_delete_success_dialog_body">주문내역을 모두 삭제했습니다.</string>
 </resources>
