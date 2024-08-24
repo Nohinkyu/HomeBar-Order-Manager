@@ -5,5 +5,6 @@ data class OrderItem(
     val createAt: String,
     val order: List<CartMenuItem>,
     val orderUserMail: String,
-    val orderNumber: Int,
+    val tableNumber: String,
+    var serviceComplete: Boolean = false
 )

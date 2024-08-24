@@ -13,7 +13,7 @@ object Constants {
     const val SUPABSE_DB_COLUMN_CREATE_AT = "create_at"
     const val SUPABSE_DB_COLUMN_ORDER = "order"
     const val SUPABASE_DB_COLUMN_ORDER_USER_MAIL = "order_user_mail"
-    const val SUPABSE_DB_COLUMN_ORDER_NUMBER = "order_number"
+    const val SUPABSE_DB_COLUMN_TABLE_NUMBER = "table_number"
 
     const val SUPABASE_CHANNEL_ID = "supabase_channel"
     const val SUPABASE_CHANNEL_SCHEMA = "public"

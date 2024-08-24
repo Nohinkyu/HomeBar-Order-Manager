@@ -34,7 +34,7 @@ class OrderRemoteDataSource @Inject constructor(
                     createAt = item.createAt,
                     orderUserMail = item.orderUserMail,
                     order = toOrderList(item.order),
-                    orderNumber = item.orderNumber.toInt()
+                    tableNumber = item.tableNumber
                 )
             )
         }
@@ -47,7 +47,7 @@ class OrderRemoteDataSource @Inject constructor(
             createAt = order.createAt,
             orderUserMail = order.orderUserMail,
             order = toOrderList(order.order),
-            orderNumber = order.orderNumber.toInt()
+            tableNumber = order.tableNumber
         )
     }
 
@@ -59,7 +59,7 @@ class OrderRemoteDataSource @Inject constructor(
                     Constants.SUPABSE_DB_COLUMN_CREATE_AT,
                     Constants.SUPABSE_DB_COLUMN_ORDER,
                     Constants.SUPABASE_DB_COLUMN_ORDER_USER_MAIL,
-                    Constants.SUPABSE_DB_COLUMN_ORDER_NUMBER
+                    Constants.SUPABSE_DB_COLUMN_TABLE_NUMBER
                 )
             ) {
                 filter {
