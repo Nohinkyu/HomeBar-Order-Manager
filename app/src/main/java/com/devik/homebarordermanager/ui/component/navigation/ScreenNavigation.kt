@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.devik.homebarordermanager.data.source.database.PreferenceManager
 import com.devik.homebarordermanager.ui.screen.order.OrderScreen
+import com.devik.homebarordermanager.ui.screen.setting.SettingScreen
 import com.devik.homebarordermanager.ui.screen.signin.SignInScreen
 import com.devik.homebarordermanager.util.Constants
 
@@ -29,6 +30,9 @@ fun ScreenNavigation(navController: NavHostController) {
         }
         composable(NavigationRoute.ORDER_SCREEN) {
             OrderScreen(navController = navController)
+        }
+        composable(NavigationRoute.SETTING_SCREEN) {
+            SettingScreen(navController = navController)
         }
     }
 }

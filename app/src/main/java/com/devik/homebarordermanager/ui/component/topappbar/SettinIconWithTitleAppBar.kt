@@ -19,7 +19,7 @@ fun SettingWithTitleAppBar(title: String, settingIconOnClick:() -> Unit) {
             Text(text = title, fontSize = 24.sp, color = OrangeSoda)
         },
         actions = {
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick =  settingIconOnClick ) {
                 Icon(imageVector = Icons.Default.Settings, contentDescription = "")
             }
         }

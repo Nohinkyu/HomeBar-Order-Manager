@@ -25,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -49,6 +51,7 @@ import com.devik.homebarordermanager.data.model.OrderItem
 import com.devik.homebarordermanager.ui.component.dialog.DeleteInProgressDialog
 import com.devik.homebarordermanager.ui.component.dialog.ResultDialog
 import com.devik.homebarordermanager.ui.component.dialog.YesOrNoDialog
+import com.devik.homebarordermanager.ui.component.navigation.NavigationRoute
 import com.devik.homebarordermanager.ui.component.topappbar.SettingWithTitleAppBar
 import com.devik.homebarordermanager.ui.theme.LightBlue
 import com.devik.homebarordermanager.ui.theme.LightGray
@@ -115,7 +118,7 @@ fun OrderScreen(navController: NavController) {
         Scaffold(
             topBar = {
                 SettingWithTitleAppBar(title = stringResource(R.string.order_screen_appbar_title),
-                    settingIconOnClick = {})
+                    settingIconOnClick = { navController.navigate(NavigationRoute.SETTING_SCREEN) })
             },
             modifier = Modifier.padding(top = 8.dp)
         ) {
@@ -207,7 +210,7 @@ private fun OrderItem(orderItem: OrderItem, orderColor: Color, onDeleteClick: ()
             modifier = Modifier
                 .fillMaxSize()
                 .background(color = Color.White)
-                .padding(16.dp),
+                .padding(12.dp),
             shape = RoundedCornerShape(8.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -225,7 +228,7 @@ private fun OrderItem(orderItem: OrderItem, orderColor: Color, onDeleteClick: ()
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "#${orderItem.orderNumber}",
+                        text = "#${orderItem.tableNumber}",
                         color = Color.White,
                         modifier = Modifier.padding(start = 16.dp),
                         fontSize = 18.sp,
@@ -239,11 +242,30 @@ private fun OrderItem(orderItem: OrderItem, orderColor: Color, onDeleteClick: ()
                         fontWeight = FontWeight.Bold
                     )
                 }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.order_screen_menu_name),
+                        modifier = Modifier.padding(start = 12.dp),
+                        fontSize = 18.sp,
+                    )
+                    Text(
+                        text = stringResource(R.string.order_screen_menu_count),
+                        modifier = Modifier.padding(end = 12.dp),
+                        fontSize = 18.sp,
+                    )
+                }
+                HorizontalDivider(thickness = 1.dp, color = LightGray)
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(240.dp)
-                        .padding(top = 12.dp, bottom = 12.dp),
+                        .padding(top = 8.dp, bottom = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(items = orderItem.order) { cartMenuItem ->
@@ -310,7 +332,21 @@ private fun OrderMenuItem(cartMenuItem: CartMenuItem) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = cartMenuItem.menuName, fontSize = 18.sp)
-        Text(text = cartMenuItem.menuCount.toString(), fontSize = 18.sp)
+        Text(
+            text = cartMenuItem.menuName,
+            fontSize = 18.sp,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(end = 18.dp),
+            maxLines = 1
+        )
+        Text(
+            text = cartMenuItem.menuCount.toString(),
+            fontSize = 18.sp,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1
+        )
     }
 }
