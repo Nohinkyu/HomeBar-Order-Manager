@@ -1,12 +1,21 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    kotlin("plugin.serialization") version "2.0.0"
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
     namespace = "com.devik.homebarordermanager"
     compileSdk = 34
+
+    val localProperties = Properties().apply {
+        load(rootProject.file("local.properties").inputStream())
+    }
 
     defaultConfig {
         applicationId = "com.devik.homebarordermanager"
@@ -19,6 +28,10 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildConfigField("String", "GOOGLE_CLIENT_ID", localProperties.getProperty("google_client_id"))
+        buildConfigField("String", "SUPABASE_PROJECT_URL", localProperties.getProperty("supabase_project_url"))
+        buildConfigField("String", "SUPABASE_PROJECT_API_KEY", localProperties.getProperty("supabase_project_api_key"))
+        buildConfigField("String", "GOOGLE_FORMS_URL", localProperties.getProperty("google_forms_url"))
     }
 
     buildTypes {
@@ -38,6 +51,7 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
     packaging {
@@ -64,4 +78,24 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // Hilt
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+
+    // Google Sign in
+    implementation("androidx.credentials:credentials:1.3.0-alpha04")
+    implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+    implementation ("androidx.credentials:credentials-play-services-auth:1.2.2")
+    implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+
+    // Supabase
+    implementation(platform("io.github.jan-tennert.supabase:bom:2.5.0"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:gotrue-kt")
+    implementation("io.ktor:ktor-client-android:2.3.11")
+    implementation ("io.github.jan-tennert.supabase:realtime-kt")
+
+    // Navigation
+    implementation ("androidx.navigation:navigation-compose:2.7.7")
 }

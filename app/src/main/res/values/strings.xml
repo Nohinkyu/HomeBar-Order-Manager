@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">HomeBar Order Manager</string>
+
+    <string name="google_sign_in_button">Google 계정으로 로그인</string>
+    <string name="message_sign_in_cancel">"로그인을 취소되었습니다. 네트워크 상태를 확인해 주세요. 로그인 시도를 여러 번 취소하면 일시적으로 로그인할 수 없을 수 있습니다."</string>
+    <string name="message_to_many_sign_in_cancel">"로그인을 여러 번 취소하여 일시적으로 로그인이 차단되었습니다. 잠시 후 다시 시도해 주세요."</string>
+    <string name="message_sign_fail">"로그인에 실패했습니다. 네트워크 상태를 확인하거나 나중에 다시 시도해 주세요."</string>
+    <string name="message_sign_in_success">HomeBar Order Manager 로그인 성공.</string>
 </resources>
